@@ -8,7 +8,7 @@
 
 void test_sincos(Logger& log)
 {
-  static float PI = acos(-1);
+  static float PI = acosf(-1);
 
   float ALIGN16_BEG angles[256] ALIGN16_END;
   float ALIGN16_BEG sines[256] ALIGN16_END;
@@ -19,7 +19,7 @@ void test_sincos(Logger& log)
   __m128 mmsin, mmcos;
 
   for (size_t i = 0; i<256; ++i)
-    angles[i] = 2. * PI * i / 256;
+    angles[i] = 2.0f * PI * i / 256;
 
   for (size_t i = 0; i<64; ++i)
   {
@@ -45,7 +45,7 @@ void test_atan(Logger& log)
   float ALIGN16_BEG atans[256] ALIGN16_END;
 
   for (size_t i = 0; i<256; ++i)
-    vals[i] = (i - 128.) / 10.;
+    vals[i] = (i - 128.f) / 10.f;
   for (size_t i = 0; i<64; ++i)
     _mm_storeu_ps(atans + 4*i, _mm_atan_ps(_mm_loadu_ps(vals + 4*i)));
   for (size_t i = 0; i<256; ++i)
@@ -62,8 +62,8 @@ void test_atan2(Logger& log)
 
   for (size_t i = 0; i<16; ++i)
   {
-    valt[i] = (i - 8.) / 20.;
-    valu[i] = (i - 8.) / 20.;
+    valt[i] = (i - 8.f) / 20.f;
+    valu[i] = (i - 8.f) / 20.f;
   }
 
   for (size_t i = 0; i<16; ++i)

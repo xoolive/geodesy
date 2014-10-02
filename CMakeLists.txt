@@ -8,14 +8,6 @@ if (INTEL_COMPILER)
   cmake_force_cxx_compiler (icpc "Intel C++ Compiler")
 endif (INTEL_COMPILER)
 
-# For the mac with openMP
-# find_program (LLVM_GCC_4_2 llvm-gcc-4.2)
-# if (LLVM_GCC_4_2)
-#   include (CMakeForceCompiler)
-#   cmake_force_c_compiler (llvm-gcc-4.2 "OpenMP compliant compiler in Mac OS")
-#   cmake_force_c_compiler (llvm-g++-4.2 "OpenMP compliant compiler in Mac OS")
-# endif (LLVM_GCC_4_2)
-
 set (CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../ocaml-cmake/cmake")
 
 find_package (OCaml REQUIRED)
