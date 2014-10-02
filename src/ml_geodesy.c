@@ -9,6 +9,10 @@ extern "C" {
 #include "spherical_geodesy.h"
 #include "wgs84_geodesy.h"
 
+#if _M_IX86_FP == 2
+#  define __SSE2__
+#endif
+
 #ifdef __SSE2__
 # include <immintrin.h>
 #endif
@@ -22,8 +26,8 @@ value sph_distance (value v_lat1, value v_lon1, value v_lat2, value v_lon2)
   float distance, bearing1, bearing2;
 
   SphericalGeodesy_f::distanceAndBearing(
-      Double_val(v_lat1), Double_val(v_lon1),
-      Double_val(v_lat2), Double_val(v_lon2),
+      (float) Double_val(v_lat1), (float) Double_val(v_lon1),
+      (float) Double_val(v_lat2), (float) Double_val(v_lon2),
       distance, bearing1, bearing2);
 
   v_res = copy_double(distance);
@@ -37,16 +41,15 @@ value sph_distance_fast(value v_lat1, value v_lon1, value v_lat2, value v_lon2)
   CAMLparam4(v_lat1, v_lon1, v_lat2, v_lon2);
   CAMLlocal1(v_res);
 
-  int len  = Wosize_val(v_lat1) / Double_wosize;
-  int len2 = Wosize_val(v_lon1) / Double_wosize;
-  int len3 = Wosize_val(v_lat2) / Double_wosize;
-  int len4 = Wosize_val(v_lon2) / Double_wosize;
+  mlsize_t len  = Wosize_val(v_lat1) / Double_wosize;
+  mlsize_t len2 = Wosize_val(v_lon1) / Double_wosize;
+  mlsize_t len3 = Wosize_val(v_lat2) / Double_wosize;
+  mlsize_t len4 = Wosize_val(v_lon2) / Double_wosize;
 
   if (len != len2 || len != len3 || len != len4)
     caml_invalid_argument("Incompatible sizes");
 
 #ifdef __SSE2__
-
   {
     float* lat1 = (float*) _mm_malloc(len * sizeof(float), 16);
     float* lon1 = (float*) _mm_malloc(len * sizeof(float), 16);
@@ -99,8 +102,8 @@ value sph_distance_fast(value v_lat1, value v_lon1, value v_lat2, value v_lon2)
     for (size_t i = 0; i < len; ++i)
     {
       SphericalGeodesy_f::distanceAndBearing(
-          Double_field(v_lat1, i), Double_field(v_lon1, i),
-          Double_field(v_lat2, i), Double_field(v_lon2, i),
+          (float) Double_field(v_lat1, i), (float) Double_field(v_lon1, i),
+          (float) Double_field(v_lat2, i), (float) Double_field(v_lon2, i),
           res, b1, b2);
       Store_double_field(v_res, i, res);
     }
@@ -137,14 +140,17 @@ value sph_destination_fast(value v_lat, value v_lon, value v_h, value v_d)
   CAMLparam4(v_lat, v_lon, v_h, v_d);
   CAMLlocal1(v_res);
 
-  int len  = Wosize_val(v_lat) / Double_wosize;
-  int len2 = Wosize_val(v_lon) / Double_wosize;
-  int len3 = Wosize_val(v_h) / Double_wosize;
-  int len4 = Wosize_val(v_d) / Double_wosize;
+  mlsize_t len  = Wosize_val(v_lat) / Double_wosize;
+  mlsize_t len2 = Wosize_val(v_lon) / Double_wosize;
+  mlsize_t len3 = Wosize_val(v_h) / Double_wosize;
+  mlsize_t len4 = Wosize_val(v_d) / Double_wosize;
 
   if (len != len2 || len != len3 || len != len4)
     caml_invalid_argument("Incompatible sizes");
   value v_reslat, v_reslon;
+
+  v_reslat = caml_alloc(len * Double_wosize, Double_array_tag);
+  v_reslon = caml_alloc(len * Double_wosize, Double_array_tag);
 
 #ifdef __SSE2__
 
@@ -183,9 +189,6 @@ value sph_destination_fast(value v_lat, value v_lon, value v_h, value v_d)
           lat[i], lon[i], h[i], d[i], res_lat[i], res_lon[i], b2);
     }
 
-    v_reslat = caml_alloc(len * Double_wosize, Double_array_tag);
-    v_reslon = caml_alloc(len * Double_wosize, Double_array_tag);
-
     for (size_t i = 0; i < len; ++i)
     {
       Store_double_field(v_reslat, i, res_lat[i]);
@@ -200,14 +203,13 @@ value sph_destination_fast(value v_lat, value v_lon, value v_h, value v_d)
 #else
 
   {
-    float res_lat, res_lon, b2;
-    v_res = caml_alloc(len * Double_wosize, Double_array_tag);
-
+    float res_lat, res_lon, b;
+	
     for (size_t i = 0; i < len; ++i)
     {
       SphericalGeodesy_f::destination(
-          Double_field(v_lat, i), Double_field(v_lon, i),
-          Double_field(v_h, i), Double_field(v_d, i),
+          (float) Double_field(v_lat, i), (float) Double_field(v_lon, i),
+          (float) Double_field(v_h, i), (float) Double_field(v_d, i),
           res_lat, res_lon, b);
       Store_double_field(v_reslat, i, res_lat);
       Store_double_field(v_reslon, i, res_lon);

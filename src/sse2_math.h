@@ -47,16 +47,16 @@
   static const __m128 _mm_cst_ps_mtwo  = _mm_set1_ps(-2.0f);
   static const __m128 _mm_cst_ps_0p5   = _mm_set1_ps(0.5f);
 
-  static const __m128 _mm_cst_ps_tan3pio8 = _mm_set1_ps(2.414213562373095);
-  static const __m128 _mm_cst_ps_tanpio8  = _mm_set1_ps(0.4142135623730950);
+  static const __m128 _mm_cst_ps_tan3pio8 = _mm_set1_ps(2.414213562373095f);
+  static const __m128 _mm_cst_ps_tanpio8  = _mm_set1_ps(0.4142135623730950f);
 
-  static const __m128 _mm_cst_ps_fopi     = _mm_set1_ps(1.27323954473516);
+  static const __m128 _mm_cst_ps_fopi     = _mm_set1_ps(1.27323954473516f);
 
-  static const __m128 _mm_cst_ps_pi    = _mm_set1_ps(3.14159265358979);
-  static const __m128 _mm_cst_ps_mpi   = _mm_set1_ps(-3.14159265358979);
-  static const __m128 _mm_cst_ps_pio2  = _mm_set1_ps(1.5707963267948966);
-  static const __m128 _mm_cst_ps_mpio2 = _mm_set1_ps(-1.5707963267948966);
-  static const __m128 _mm_cst_ps_pio4  = _mm_set1_ps(0.7853981633974483);
+  static const __m128 _mm_cst_ps_pi    = _mm_set1_ps(3.14159265358979f);
+  static const __m128 _mm_cst_ps_mpi   = _mm_set1_ps(-3.14159265358979f);
+  static const __m128 _mm_cst_ps_pio2  = _mm_set1_ps(1.5707963267948966f);
+  static const __m128 _mm_cst_ps_mpio2 = _mm_set1_ps(-1.5707963267948966f);
+  static const __m128 _mm_cst_ps_pio4  = _mm_set1_ps(0.7853981633974483f);
 
   /*
    * Extended precision modular arithmetic:
@@ -75,22 +75,22 @@
    *
    *  ->  Note the alignment
    */
-  static const __m128 _mm_cst_ps_DP1 = _mm_set1_ps(-0.78515625);
-  static const __m128 _mm_cst_ps_DP2 = _mm_set1_ps(-2.4187564849853515625e-4);
-  static const __m128 _mm_cst_ps_DP3 = _mm_set1_ps(-3.77489497744594108e-8);
+  static const __m128 _mm_cst_ps_DP1 = _mm_set1_ps((float) -0.78515625);
+  static const __m128 _mm_cst_ps_DP2 = _mm_set1_ps((float) -2.4187564849853515625e-4);
+  static const __m128 _mm_cst_ps_DP3 = _mm_set1_ps((float) -3.77489497744594108e-8);
 
-  static const __m128 _mm_cst_ps_sincof_p0 = _mm_set1_ps(-1.9515295891e-4);
-  static const __m128 _mm_cst_ps_sincof_p1 = _mm_set1_ps( 8.3321608736e-3);
-  static const __m128 _mm_cst_ps_sincof_p2 = _mm_set1_ps(-1.6666654611e-1);
+  static const __m128 _mm_cst_ps_sincof_p0 = _mm_set1_ps((float) -1.9515295891e-4);
+  static const __m128 _mm_cst_ps_sincof_p1 = _mm_set1_ps((float)  8.3321608736e-3);
+  static const __m128 _mm_cst_ps_sincof_p2 = _mm_set1_ps((float) -1.6666654611e-1);
 
-  static const __m128 _mm_cst_ps_coscof_p0 = _mm_set1_ps( 2.443315711809948e-5);
-  static const __m128 _mm_cst_ps_coscof_p1 = _mm_set1_ps(-1.388731625493765e-3);
-  static const __m128 _mm_cst_ps_coscof_p2 = _mm_set1_ps( 4.166664568298827e-2);
+  static const __m128 _mm_cst_ps_coscof_p0 = _mm_set1_ps((float)  2.443315711809948e-5);
+  static const __m128 _mm_cst_ps_coscof_p1 = _mm_set1_ps((float) -1.388731625493765e-3);
+  static const __m128 _mm_cst_ps_coscof_p2 = _mm_set1_ps((float)  4.166664568298827e-2);
 
-  static const __m128 _mm_cst_ps_atancof_p0 = _mm_set1_ps( 8.05374449538e-2);
-  static const __m128 _mm_cst_ps_atancof_p1 = _mm_set1_ps(-1.38776856032e-1);
-  static const __m128 _mm_cst_ps_atancof_p2 = _mm_set1_ps( 1.99777106478e-1);
-  static const __m128 _mm_cst_ps_atancof_p3 = _mm_set1_ps(-3.33329491539e-1);
+  static const __m128 _mm_cst_ps_atancof_p0 = _mm_set1_ps((float)  8.05374449538e-2);
+  static const __m128 _mm_cst_ps_atancof_p1 = _mm_set1_ps((float) -1.38776856032e-1);
+  static const __m128 _mm_cst_ps_atancof_p2 = _mm_set1_ps((float)  1.99777106478e-1);
+  static const __m128 _mm_cst_ps_atancof_p3 = _mm_set1_ps((float) -3.33329491539e-1);
 
   /*
    * Range reduction is into intervals of pi/4.  The reduction error is nearly

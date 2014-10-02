@@ -33,15 +33,15 @@ template<> float WGS84Geodesy<float>::wgs84_a = 6378137.;
 template<> double WGS84Geodesy<double>::wgs84_a = 6378137.;
 
 // Note that f = (a - b) / a
-template<> float WGS84Geodesy<float>::wgs84_b = 6356752.3142;
+template<> float WGS84Geodesy<float>::wgs84_b = 6356752.3142f;
 template<> double WGS84Geodesy<double>::wgs84_b = 6356752.3142;
 
 // 1/298.257223563;
-template<> float WGS84Geodesy<float>::wgs84_f = 0.00335281066474748;
+template<> float WGS84Geodesy<float>::wgs84_f = 0.00335281066474748f;
 template<> double WGS84Geodesy<double>::wgs84_f = 0.00335281066474748;
 
 // Rotation speed (7.292115e-5 rad/s)
-template<> float WGS84Geodesy<float>::wgs84_w = 0.00007292115;
+template<> float WGS84Geodesy<float>::wgs84_w = 0.00007292115f;
 template<> double WGS84Geodesy<double>::wgs84_w = 0.00007292115;
 
 typedef WGS84Geodesy<float> WGS84Geodesy_f;
