@@ -9,12 +9,13 @@ extern "C" {
 #include "spherical_geodesy.h"
 #include "wgs84_geodesy.h"
 
+// This is not set by Microsoft 64-bit compiler...
 #if _M_IX86_FP == 2
 #  define __SSE2__
 #endif
 
 #ifdef __SSE2__
-# include <immintrin.h>
+# include <xmmintrin.h>
 #endif
 
 extern "C"
@@ -59,10 +60,10 @@ value sph_distance_fast(value v_lat1, value v_lon1, value v_lat2, value v_lon2)
 
     for (size_t i = 0; i < len; ++i)
     {
-      lat1[i] = Double_field(v_lat1, i);
-      lon1[i] = Double_field(v_lon1, i);
-      lat2[i] = Double_field(v_lat2, i);
-      lon2[i] = Double_field(v_lon2, i);
+      lat1[i] = (float) Double_field(v_lat1, i);
+      lon1[i] = (float) Double_field(v_lon1, i);
+      lat2[i] = (float) Double_field(v_lat2, i);
+      lon2[i] = (float) Double_field(v_lon2, i);
     }
 
     __m128 distance, bearing1, bearing2;
@@ -164,10 +165,10 @@ value sph_destination_fast(value v_lat, value v_lon, value v_h, value v_d)
 
     for (size_t i = 0; i < len; ++i)
     {
-      lat[i] = Double_field(v_lat, i);
-      lon[i] = Double_field(v_lon, i);
-      h[i]   = Double_field(v_h, i);
-      d[i]   = Double_field(v_d, i);
+      lat[i] = (float) Double_field(v_lat, i);
+      lon[i] = (float) Double_field(v_lon, i);
+      h[i]   = (float) Double_field(v_h, i);
+      d[i]   = (float) Double_field(v_d, i);
     }
 
     __m128 lat2, lon2, bearing2;
@@ -204,7 +205,7 @@ value sph_destination_fast(value v_lat, value v_lon, value v_h, value v_d)
 
   {
     float res_lat, res_lon, b;
-	
+
     for (size_t i = 0; i < len; ++i)
     {
       SphericalGeodesy_f::destination(
@@ -281,7 +282,7 @@ value wgs84_destination (value v_lat, value v_lon, value v_h, value v_d)
 
   WGS84Geodesy_d::destination(
       Double_val(v_lat), Double_val(v_lon),
-      Double_val(v_h)  , Double_val(v_d),
+      Double_val(v_h), Double_val(v_d),
       tolat, tolon, bearing);
 
   v_res = caml_alloc_tuple(2);
