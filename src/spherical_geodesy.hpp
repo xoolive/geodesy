@@ -1,6 +1,7 @@
 #include <cmath>
 #include <iostream>
 
+// This is not set by Microsoft 64-bit compiler...
 #if _M_IX86_FP == 2
 #  define __SSE2__
 #endif
@@ -18,6 +19,7 @@
 #    define ALIGN16_END __attribute__((aligned (16)))
 #  endif
 
+#define TWO ((T) 2.0)
 
 template<typename T>
 void SphericalGeodesy<T>::distanceAndBearing(
@@ -30,8 +32,8 @@ void SphericalGeodesy<T>::distanceAndBearing(
   const T cos_lat1 = cos(fromlat);
   const T cos_lat2 = cos(tolat);
 
-  const T sin_dlat_2 = sin(dlat / (T) 2.0);
-  const T sin_dlon_2 = sin(dlon / (T) 2.0);
+  const T sin_dlat_2 = sin(dlat / TWO);
+  const T sin_dlon_2 = sin(dlon / TWO);
   const T a = sin_dlat_2 * sin_dlat_2 +
     sin_dlon_2 * sin_dlon_2 * cos_lat1 * cos_lat2;
   const T c = 2 * atan2(sqrt(a), sqrt(1-a));
@@ -197,7 +199,7 @@ void SphericalGeodesy<T>::crosstrack(
     T& tolat, T& tolon, T& distance)
 {
 
-  static T PI = acosf(-1.);
+  static T PI = (T) acos(-1.);
 
   // Compute the distance to the closest point ("cross-track error")
   T distance2, tmp, bearing2;
@@ -233,9 +235,9 @@ void SphericalGeodesy<T>::intersection(
 
   const T dlat = lat2 - lat1, dlon = lon2 - lon1;
 
-  T dist12 = (T) 2.*asin(sqrt(sin(dlat/(T) 2.) * sin(dlat/(T) 2.) +
-                          cos(lat1) * cos(lat2) *
-                          sin(dlon/(T) 2.) * sin(dlon/(T) 2.)));
+  T dist12 = TWO * asin(sqrt(sin(dlat/TWO) * sin(dlat/TWO) +
+                             cos(lat1) * cos(lat2) *
+                             sin(dlon/TWO) * sin(dlon/TWO)));
 
   if (0 == dist12) throw IntersectionException();
 
@@ -253,7 +255,7 @@ void SphericalGeodesy<T>::intersection(
   const T alpha2 = (brng21 - brng2);
 
   if (sin(alpha1) == 0 && sin(alpha2) == 0) throw IntersectionException();
-  if (sin(alpha1)*sin(alpha2) < 0) throw IntersectionException();
+  if (sin(alpha1) * sin(alpha2) < 0) throw IntersectionException();
 
   const T alpha3 = acos(-cos(alpha1) * cos(alpha2) +
                         sin(alpha1) * sin(alpha2) * cos(dist12));

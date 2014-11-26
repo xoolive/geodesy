@@ -9,7 +9,7 @@ try:
     import numpy
     INCLUDE.append(numpy.get_include())  # __path__[0] + "/core/include")
 except ImportError:
-    print "numpy is required in order to use geodesy toolkit"
+    print ("numpy is required in order to use geodesy toolkit")
     raise
 
 # copt = {'msvc': ['/arch:SSE2'],

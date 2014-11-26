@@ -1,12 +1,25 @@
 cmake_minimum_required (VERSION 2.6)
 project (deconflict CXX)
 
+if (WIN32)
+
+find_program (INTEL_COMPILER icl)
+if (INTEL_COMPILER)
+  include (CMakeForceCompiler)
+  cmake_force_c_compiler (${INTEL_COMPILER} "Intel C Compiler")
+  cmake_force_cxx_compiler (${INTEL_COMPILER} "Intel C++ Compiler")
+endif (INTEL_COMPILER)
+
+else (WIN32)
+
 find_program (INTEL_COMPILER icc)
 if (INTEL_COMPILER)
   include (CMakeForceCompiler)
   cmake_force_c_compiler (icc "Intel C Compiler")
   cmake_force_cxx_compiler (icpc "Intel C++ Compiler")
 endif (INTEL_COMPILER)
+
+endif (WIN32)
 
 set (CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../ocaml-cmake/cmake")
 
@@ -20,6 +33,11 @@ include_directories (
 
 set_source_files_properties(src/ml_geodesy.c
   PROPERTIES LANGUAGE CXX)
+
+#  _M_IX86_FP is undefined with Microsoft 64-bit compiler
+if (CMAKE_CL_64)
+  add_definitions(/D__SSE2__)
+endif (CMAKE_CL_64)
 
 add_library (mlgeodesy src/ml_geodesy.c)
 
