@@ -37,6 +37,25 @@ value sph_distance (value v_lat1, value v_lon1, value v_lat2, value v_lon2)
 }
 
 extern "C"
+value sph_bearing (value v_lat1, value v_lon1, value v_lat2, value v_lon2)
+{
+  CAMLparam4(v_lat1, v_lon1, v_lat2, v_lon2);
+  CAMLlocal1(v_res);
+
+  float distance, bearing1, bearing2;
+
+  SphericalGeodesy_f::distanceAndBearing(
+      (float) Double_val(v_lat1), (float) Double_val(v_lon1),
+      (float) Double_val(v_lat2), (float) Double_val(v_lon2),
+      distance, bearing1, bearing2);
+
+  v_res = copy_double(bearing1);
+
+  CAMLreturn(v_res);
+}
+
+
+extern "C"
 value sph_distance_fast(value v_lat1, value v_lon1, value v_lat2, value v_lon2)
 {
   CAMLparam4(v_lat1, v_lon1, v_lat2, v_lon2);
