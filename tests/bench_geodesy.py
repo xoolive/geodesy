@@ -7,13 +7,13 @@ from chrono import chronometer
 
 @chronometer
 def distance_vec(p1, p2):
-    """ Do. """
+    """ Do it! """
     geo.distance_fast(p1, p2)
 
 
 @chronometer
 def distance_nonvec():
-    """ Do. """
+    """ Do it! """
     [geo.distance((0., i / 60.), (0, (i + 1) / 60)) for i in range(size)]
 
 size = 360 * 60 - 1
@@ -26,6 +26,6 @@ for j in xrange(nbloops):
     distance_vec(p1, p2)
     distance_nonvec()
 
-print "distance (favorable):\t vectorised %g regular %g speedup %f" % \
+print "distance:\t vectorised %g regular %g speedup %f" % \
     (distance_vec.acc_tps, distance_nonvec.acc_tps,
      (distance_nonvec.acc_tps / distance_vec.acc_tps))

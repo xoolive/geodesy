@@ -44,6 +44,19 @@ public:
     }
   }
 
+  void testdouble (int line, double a, double b, std::string message,
+                  double precision = DBL_EPSILON)
+  {
+    out << line << ":\t" <<
+      "a=" << a <<"; b=" << b  << "\t" << fabs(a - b) << "\t" <<
+      message << std::endl;
+    if (fabs(a - b) > precision)
+    {
+      out << "ERROR ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ERROR\n";
+      nbError += 1;
+    }
+  }
+
   void testhex (int line, int a, int b, std::string message)
   {
     out << line << ":\t" << std::hex <<
@@ -57,10 +70,10 @@ public:
   }
 
   int reportexit() {
-    std::cout << "############################### " << nbError << " error(s) in: \n" << file << std::endl;
-    std::cout << out.str();
+    std::cerr << "############################### " << nbError << " error(s) in: \n" << file << std::endl;
+    std::cerr << out.str();
     if (0 == nbError) return EXIT_SUCCESS;
-    std::cout << "############################### " << nbError << " error(s) in: \n" << file << std::endl;
+    std::cerr << "############################### " << nbError << " error(s) in: \n" << file << std::endl;
     return EXIT_FAILURE;
   }
 

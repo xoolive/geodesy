@@ -1,4 +1,4 @@
 build
-geodesy.egg-info
 setup.cfg
+*.egg-info
 .*.sw*

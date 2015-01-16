@@ -3,7 +3,7 @@ module SphericalGeodesy :
   sig
     external distance : float -> float -> float -> float -> float
       = "sph_distance"
-	external bearing : float -> float -> float -> float -> float
+    external bearing : float -> float -> float -> float -> float
       = "sph_bearing"
     external destination : float -> float -> float -> float -> float * float
       = "sph_destination"

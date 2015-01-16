@@ -62,6 +62,9 @@ let test_geodesy_destination () =
 
     let rlat1, rlon1 = SphericalGeodesy.destination_fast ones lon v d in
 
+    let la, lo = SphericalGeodesy.destination 1. lon.(2) v.(2) d.(2) in
+    print_newline ();
+
     Array.iteri (
       fun i p ->
         assert_float p
