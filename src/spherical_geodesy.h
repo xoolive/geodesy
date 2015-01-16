@@ -39,6 +39,8 @@ private:
 # include <emmintrin.h>
   template<> __m128 SphericalGeodesy<__m128>::EarthRadius =
     _mm_set1_ps(6371000.0);
+  template<> __m128d SphericalGeodesy<__m128d>::EarthRadius =
+    _mm_set1_pd(6371000.0);
 #endif
 
 #include "spherical_geodesy.hpp"

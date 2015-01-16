@@ -115,6 +115,72 @@ void SphericalGeodesy<__m128>::distanceAndBearing(
 
 }
 
+template<>
+void SphericalGeodesy<__m128d>::distanceAndBearing(
+    const __m128d& fromlat, const __m128d& fromlon,
+    const __m128d& tolat, const __m128d& tolon, __m128d& distance,
+    __m128d& bearing1, __m128d& bearing2)
+{
+  static const __m128d one_pd = _mm_set1_pd(1.0);
+  static const __m128d two_pd = _mm_set1_pd(2.0);
+  static const __m128d two_earth = _mm_mul_pd(two_pd, EarthRadius);
+
+//   const T dlat = tolat - fromlat;
+//   const T dlon = tolon - fromlon;
+  __m128d dlat = _mm_sub_pd(tolat, fromlat);
+  __m128d dlon = _mm_sub_pd(tolon, fromlon);
+
+//   const T cos_lat1 = cos(fromlat);
+//   const T cos_lat2 = cos(tolat);
+  ALIGN16_BEG static __m128d cos_lat1 ALIGN16_END;
+  ALIGN16_BEG static __m128d cos_lat2 ALIGN16_END;
+  __m128d sin_lat1 = _mm_sincos_pd(&cos_lat1, fromlat);
+  __m128d sin_lat2 = _mm_sincos_pd(&cos_lat2, fromlat);
+
+  ALIGN16_BEG __m128d cos_dlon ALIGN16_END;
+  __m128d sin_dlon = _mm_sincos_pd(&cos_dlon, dlon);
+
+//   const T sin_dlat_2 = sin(dlat / 2.0);
+//   const T sin_dlon_2 = sin(dlon / 2.0);
+  __m128d sin_dlat_2 = _mm_sin_pd ( _mm_div_pd( dlat, two_pd ) );
+  __m128d sin_dlon_2 = _mm_sin_pd ( _mm_div_pd( dlon, two_pd ) );
+
+//   const T a = sin_dlat_2 * sin_dlat_2 +
+//     sin_dlon_2 * sin_dlon_2 * cos_lat1 * cos_lat2;
+//   const T c = 2 * atan2(sqrt(a), sqrt(1-a));
+//   distance = c * EarthRadius;
+  __m128d a = _mm_add_pd (_mm_mul_pd ( sin_dlat_2, sin_dlat_2 ),
+                          _mm_mul_pd ( _mm_mul_pd ( sin_dlon_2, sin_dlon_2 ),
+                                       _mm_mul_pd ( cos_lat1, cos_lat2 )));
+
+  __m128d c = _mm_atan2_pd (_mm_sqrt_pd(a),
+                           _mm_sqrt_pd ( _mm_sub_pd ( one_pd, a) ));
+
+  distance = _mm_mul_pd (two_earth, c);
+
+//   const T y1 = sin(dlon) * cos_lat2;
+//   const T x1 =
+//     cos_lat1 * sin(tolat) - sin(fromlat) * cos_lat2 * cos(dlon);
+//   bearing1 = atan2(y1, x1);
+  __m128d y1   = _mm_mul_pd(sin_dlon, cos_lat2);
+  __m128d x1   = _mm_mul_pd(cos_lat1, sin_lat2);
+  x1     = _mm_sub_pd(x1, _mm_mul_pd(_mm_mul_pd(sin_lat1, cos_lat2), cos_dlon));
+  bearing1    = _mm_atan2_pd(y1, x1);
+
+//   const T y2 = - sin(dlon) * cos_lat1;
+//   const T x2 =
+//     cos_lat2 * sin(fromlat) - sin(tolat) * cos_lat1 * cos(dlon);
+//   bearing2 =  atan2(y2, x2) ;
+
+  static const __m128d mone = _mm_set1_pd(-1.0);
+
+  __m128d y2 = _mm_mul_pd(mone, _mm_mul_pd(sin_dlon, cos_lat1));
+  __m128d x2 = _mm_mul_pd(cos_lat2, sin_lat1);
+  x2     = _mm_sub_pd(x2, _mm_mul_pd(_mm_mul_pd(sin_lat2, cos_lat1), cos_dlon));
+  bearing2  = _mm_atan2_pd(y2, x2);
+
+}
+
 #endif
 
 template<typename T>
@@ -130,7 +196,6 @@ void SphericalGeodesy<T>::destination(
 
   tolat = asin(sin_lat1 * cos_d_R +
                cos_lat1 * sin_d_R * cos(bearing1));
-
   tolon = fromlon + atan2(sin(bearing1) * sin_d_R * cos_lat1,
                           cos_d_R - sin_lat1 * sin(tolat));
 
@@ -189,6 +254,55 @@ void SphericalGeodesy<__m128>::destination(
                                     _mm_cos_ps(_mm_sub_ps(tolon, fromlon))));
 
   bearing2 = _mm_atan2_ps(y2, x2);
+}
+
+template<>
+void SphericalGeodesy<__m128d>::destination(
+    const __m128d& fromlat, const __m128d& fromlon,
+    const __m128d& bearing1, const __m128d& distance,
+    __m128d& tolat, __m128d& tolon, __m128d& bearing2)
+{
+//   const T sin_lat1 = sin(fromlat);
+//   const T cos_lat1 = cos(fromlat);
+  ALIGN16_BEG static __m128d cos_lat1 ALIGN16_END;
+  __m128d sin_lat1 = _mm_sincos_pd(&cos_lat1, fromlat);
+
+//   const T d_R = distance / EarthRadius;
+//   const T sin_d_R = sin(d_R);
+//   const T cos_d_R = cos(d_R);
+  ALIGN16_BEG static __m128d cos_d_R ALIGN16_END;
+  __m128d d_R = _mm_div_pd(distance, EarthRadius);
+  __m128d sin_d_R = _mm_sincos_pd(&cos_d_R, d_R);
+
+
+  ALIGN16_BEG static __m128d cos_b1 ALIGN16_END;
+  __m128d sin_b1 = _mm_sincos_pd(&cos_b1, bearing1);
+
+//   tolat = asin(sin_lat1 * cos_d_R + cos_lat1 * sin_d_R * cos(bearing1));
+  tolat = _mm_asin_pd(
+      _mm_add_pd(_mm_mul_pd(sin_lat1, cos_d_R),
+                 _mm_mul_pd(_mm_mul_pd(cos_lat1, sin_d_R), cos_b1)));
+
+//   tolon = fromlon + atan2(sin(bearing1) * sin_d_R * cos_lat1,
+//                           cos_d_R - sin_lat1 * sin(tolat));
+  ALIGN16_BEG static __m128d cos_lat2 ALIGN16_END;
+  __m128d sin_lat2 = _mm_sincos_pd(&cos_lat2, tolat);
+
+  tolon = _mm_atan2_pd(_mm_mul_pd(sin_b1, _mm_mul_pd(sin_d_R, cos_lat1)),
+                       _mm_sub_pd(cos_d_R, _mm_mul_pd(sin_lat1, sin_lat2)));
+  tolon = _mm_add_pd(tolon, fromlon);
+
+//   const T y2 = -sin(tolat - fromlat) * cos_lat1;
+//   const T x2 = cos(tolat) * sin_lat1 -
+//     sin(tolat) * cos_lat1 * cos(tolon - fromlon);
+//   bearing2 = atan2(y2, x2);
+
+  __m128d y2 = _mm_mul_pd(_mm_sin_pd(_mm_sub_pd(fromlat, tolat)), cos_lat1);
+  __m128d x2 = _mm_sub_pd(_mm_mul_pd(cos_lat2, sin_lat1),
+                         _mm_mul_pd(_mm_mul_pd(sin_lat2, cos_lat1),
+                                    _mm_cos_pd(_mm_sub_pd(tolon, fromlon))));
+
+  bearing2 = _mm_atan2_pd(y2, x2);
 }
 #endif
 
