@@ -72,9 +72,7 @@ enable_testing()
 # Those checks should be performed with other compilers though!
 if (INTEL_COMPILER)
 else (INTEL_COMPILER)
-  set_source_files_properties(tests/test_sse2_math.c
-    PROPERTIES LANGUAGE CXX)
-  add_executable (tests_sse2_math tests/test_sse2_math.c)
+  add_executable (tests_sse2_math tests/test_sse2_math.cpp)
   add_test (sse2_math tests_sse2_math)
 endif (INTEL_COMPILER)
 

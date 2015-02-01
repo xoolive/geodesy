@@ -1,48 +1,42 @@
+#! /usr/bin/env python
+# -*- coding: utf-8 -*-
+
 from setuptools import setup
 from setuptools.extension import Extension
-# from distutils.command.build_ext import build_ext
 from Cython.Build import cythonize
 
+import sys
+
 INCLUDE = []
+CARGS = []
 
 try:
     import numpy
-    INCLUDE.append(numpy.get_include())  # __path__[0] + "/core/include")
+    INCLUDE.append(numpy.get_include())
 except ImportError:
     print ("numpy is required in order to use geodesy toolkit")
     raise
 
-# copt = {'msvc': ['/arch:SSE2'],
-#         }
-# lopt = {'msvc': [''],
-#         }
-
-# class build_ext_subclass(build_ext):
-#     def build_extensions(self):
-#         c = self.compiler.compiler_type
-#         if c in copt:
-#             for e in self.extensions:
-#                 e.extra_compile_args = copt[c]
-#         if c in lopt:
-#             for e in self.extensions:
-#                 e.extra_link_args = lopt[c]
-#         build_ext.build_extensions(self)
+if not sys.platform == "win32":
+    # suppress warnings for importing numpy
+    CARGS.append("-Wno-unused-function")
 
 extensions = [
     Extension("geodesy.sphere",
               ["geodesy/sphere.pyx"],
-              include_dirs=INCLUDE, language="c++"),
+              include_dirs=INCLUDE, language="c++", extra_compile_args=CARGS),
     Extension("geodesy.wgs84",
               ["geodesy/wgs84.pyx"],
-              include_dirs=INCLUDE, language="c++"),
+              include_dirs=INCLUDE, language="c++", extra_compile_args=CARGS),
 ]
 
 setup(name="geodesy",
       version="1.0",
       author="Xavier Olive",
-      author_email="xavier.olive@onera.fr",
-      description="Toolkit for geodesy",
+      author_email="xavier@xoolive.org",
+      description="A pragmatic and efficient geodesy toolkit",
       ext_modules=cythonize(extensions),
+      license="MIT",
       packages=['geodesy', ],
+      url='https://github.com/xoolive/geodesy',
       )
-#       cmdclass={'build_ext': build_ext_subclass},
