@@ -184,6 +184,77 @@ void SphericalGeodesy<__m128d>::distanceAndBearing(
 #endif
 
 template<typename T>
+void SphericalGeodesy<T>::distanceAndBearing(
+    const T* fromlat, const T* fromlon, const T* tolat, const T* tolon,
+    T* distance, T* bearing1, T* bearing2, long len)
+{
+    long i = 0;
+    for (; i < len ; ++i)
+    {
+        distanceAndBearing(fromlat[i], fromlon[i], tolat[i], tolon[i],
+                           distance[i], bearing1[i], bearing2[i]);
+    }
+}
+
+/*
+ * DON'T DO THAT !
+ * Software trigonometry is really shitty...
+ *
+ * template<>
+ * void SphericalGeodesy<double>::distanceAndBearing(
+ *     const double* fromlat, const double* fromlon,
+ *     const double* tolat, const double* tolon,
+ *     double* distance, double* bearing1, double* bearing2, long len)
+ * {
+ *     long i = 0;
+ * #ifdef __SSE2__
+ *     __m128d d, b1, b2;
+ *     for (; i < len - 1; i += 2)
+ *     {
+ *         SphericalGeodesy<__m128d>::distanceAndBearing(
+ *             _mm_load_pd(fromlat+i), _mm_load_pd(fromlon+i),
+ *             _mm_load_pd(tolat+i), _mm_load_pd(tolon+i), d, b1, b2);
+ *         _mm_storeu_pd(distance + i, d);
+ *         _mm_storeu_pd(bearing1 + i, b1);
+ *         _mm_storeu_pd(bearing2 + i, b2);
+ *     }
+ * #endif
+ *     for ( ; i < len ; ++i)
+ *     {
+ *         distanceAndBearing(fromlat[i], fromlon[i], tolat[i], tolon[i],
+ *                            distance[i], bearing1[i], bearing2[i]);
+ *     }
+ * }
+ *
+ */
+
+template<>
+void SphericalGeodesy<float>::distanceAndBearing(
+    const float* fromlat, const float* fromlon,
+    const float* tolat, const float* tolon,
+    float* distance, float* bearing1, float* bearing2, long len)
+{
+    long i = 0;
+#ifdef __SSE2__
+    __m128 d, b1, b2;
+    for (; i < len - 3; i += 4)
+    {
+        SphericalGeodesy<__m128>::distanceAndBearing(
+            _mm_load_ps(fromlat+i), _mm_load_ps(fromlon+i),
+            _mm_load_ps(tolat+i), _mm_load_ps(tolon+i), d, b1, b2);
+        _mm_storeu_ps(distance + i, d);
+        _mm_storeu_ps(bearing1 + i, b1);
+        _mm_storeu_ps(bearing2 + i, b2);
+    }
+#endif
+    for ( ; i < len ; ++i)
+    {
+        distanceAndBearing(fromlat[i], fromlon[i], tolat[i], tolon[i],
+                           distance[i], bearing1[i], bearing2[i]);
+    }
+}
+
+template<typename T>
 void SphericalGeodesy<T>::destination(
     const T& fromlat, const T& fromlon, const T& bearing1, const T& distance,
     T& tolat, T& tolon, T& bearing2)

@@ -17,6 +17,10 @@ public:
         const T& fromlat, const T& fromlon, const T& tolat, const T& tolon,
         T& distance, T& bearing1, T& bearing2);
 
+    static void distanceAndBearing(
+        const T* fromlat, const T* fromlon, const T* tolat, const T* tolon,
+        T* distance, T* bearing1, T* bearing2, long len);
+
     static void destination(
         const T& fromlat, const T& fromlon, const T& bearing1, const T& dist,
         T& tolat, T& tolon, T& bearing2);

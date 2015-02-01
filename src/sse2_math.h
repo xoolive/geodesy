@@ -902,7 +902,7 @@ __m128d _mm_asin_pd(__m128d x)
   tmp = _mm_xor_pd(tmp, signbit);
 
   // if x > 1 return 0
-  tmp = _mm_and_ps(tmp, nanmask);
+  tmp = _mm_and_pd(tmp, nanmask);
 
   return tmp;
 }

@@ -5,117 +5,312 @@
     This module gives access to a series of complex formulas related to geometry
     of great circles.
 
-    All positions are defined as a pair (lat, lon)
-
     See also: http://www.movable-type.co.uk/scripts/latlong.html
+
+    You can pass all positions as pairs (lat, lon), vectors [lat, lon, ...], or
+    in the natural order of parameters (..., lat, lon, ...).
+
+    By default, the interface works with degrees, but a radian=True flag may be
+    positioned if need be.
+
+    All parameters may be passed as iterables or numpy arrays (faster).
+    The dtype of the resulting vector is downcasted to the worst case precision
+    among all input parameters.
+
+    Note that some vectorisation may be implemented: worst case dtype of
+    numpy.float32 triggers SSE2 vectorisation (when available) for a theoretical
+    speedup of 4.
+
+    The resulting speedup is much less than expected because the vectorisation
+    of trigonometry functions is soft-coded whereas the classical implementation
+    is hard-coded in your FPU.
+
+    Expect AVX vectorisation (when available) in future versions. By then, a
+    significant speedup should result from the vectorisation of numpy.float64
+    arrays.
+
 """
 
-import math
 import numpy as np
 
 cimport numpy as cnp
 cimport cython
 cimport cpython
 
-from c_geodesy\
-    cimport sph_distance, sph_destination, sph_intersection, sph_crosstrack,\
-    sph_distance_fast
+from c_geodesy cimport\
+    sph_distance, sph_distance_vec_f, sph_distance_vec_d,\
+    sph_destination, sph_intersection, sph_crosstrack
 
-cdef double radians = math.acos(-1) / 180
+cdef double radians = np.arccos(-1) / 180
 
-def distance(p1, p2):
-    """ distance(p1 [deg; deg], p2 [deg; deg]) -> [m]
+@cython.boundscheck(False) # I will be reasonable, I promise
+@cython.wraparound (False) # no negative indices
+cdef distance_bearing(p1, p2, p3=None, p4=None, radian=False):
+    cdef long length = 0, i = 0
+    cdef double d = 0, b1 = 0, b2 = 0, lat1, lon1, lat2, lon2
+
+    cdef cnp.ndarray[cnp.float64_t, ndim=1] lat1_64, lon1_64, lat2_64, lon2_64
+    cdef cnp.ndarray[cnp.float64_t, ndim=1] d_64, b1_64, b2_64
+
+    cdef double* pt_lat1_64
+    cdef double* pt_lon1_64
+    cdef double* pt_lat2_64
+    cdef double* pt_lon2_64
+    cdef double* pt_d_64
+    cdef double* pt_b1_64
+    cdef double* pt_b2_64
+
+    cdef cnp.ndarray[cnp.float32_t, ndim=1] lat1_32, lon1_32, lat2_32, lon2_32
+    cdef cnp.ndarray[cnp.float32_t, ndim=1] d_32, b1_32, b2_32
+
+    cdef float* pt_lat1_32
+    cdef float* pt_lon1_32
+    cdef float* pt_lat2_32
+    cdef float* pt_lon2_32
+    cdef float* pt_d_32
+    cdef float* pt_b1_32
+    cdef float* pt_b2_32
+
+    cdef object item1, item2
+
+    assert ((p3 is None) == (p4 is None)),\
+        "wrong number of arguments: p3 and p4 must be provided together"
+
+    if p3 is None:
+
+        if (not cpython.PySequence_Check(p1)):
+            raise TypeError("p1 must be a (possibly iterable of) pair of float")
+        if (not cpython.PySequence_Check(p2)):
+            raise TypeError("p2 must be a (possibly iterable of) pair of float")
+
+        length = len(p1)
+        if (length != len(p2)):
+            raise IndexError("p1 and p2 must be of same length")
+
+        # That would be a unique call
+        if length > 1 and not cpython.PySequence_Check(p1[0]):
+
+            lat1 = p1[0]
+            lon1 = p1[1]
+            lat2 = p2[0]
+            lon2 = p2[1]
+
+            if not radian:
+                lat1 *= radians
+                lon1 *= radians
+                lat2 *= radians
+                lon2 *= radians
+
+            sph_distance(lat1, lon1, lat2, lon2, d, b1, b2)
+
+            if not radian:
+                b1 /= radians
+                b2 /= radians
+
+            return d, b1, b2
+
+        # That would be only double precision
+        else:
+            lat1_64 = np.empty(length, dtype=np.float64)
+            lat2_64 = np.empty(length, dtype=np.float64)
+            lon1_64 = np.empty(length, dtype=np.float64)
+            lon2_64 = np.empty(length, dtype=np.float64)
+
+            d_64 = np.empty(length, np.float64)
+            b1_64 = np.empty(length, np.float64)
+            b2_64 = np.empty(length, np.float64)
+
+            pt_lat1_64 = <double*> cnp.PyArray_DATA(lat1_64)
+            pt_lon1_64 = <double*> cnp.PyArray_DATA(lon1_64)
+            pt_lat2_64 = <double*> cnp.PyArray_DATA(lat2_64)
+            pt_lon2_64 = <double*> cnp.PyArray_DATA(lon2_64)
+
+            pt_d_64 = <double*> cnp.PyArray_DATA(d_64)
+            pt_b1_64 = <double*> cnp.PyArray_DATA(b1_64)
+            pt_b2_64 = <double*> cnp.PyArray_DATA(b2_64)
+
+            for i in range(length):
+                item1 = cpython.PySequence_ITEM(p1, i)
+                pt_lat1_64[i] = item1[0]
+                pt_lon1_64[i] = item1[1]
+
+                item2 = cpython.PySequence_ITEM(p2, i)
+                pt_lat2_64[i] = item2[0]
+                pt_lon2_64[i] = item2[1]
+
+                if not radian:
+                    pt_lat1_64[i] *= radians
+                    pt_lon1_64[i] *= radians
+                    pt_lat2_64[i] *= radians
+                    pt_lon2_64[i] *= radians
+
+            sph_distance_vec_d(pt_lat1_64, pt_lon1_64, pt_lat2_64, pt_lon2_64,
+                               pt_d_64, pt_b1_64, pt_b2_64, length)
+
+            if not radian:
+                b1_64 /= radians
+                b2_64 /= radians
+
+            return d_64, b1_64, b2_64
+
+    else:
+
+        if (not cpython.PySequence_Check(p1)):
+
+            if not radian:
+                p1 *= radians
+                p2 *= radians
+                p3 *= radians
+                p4 *= radians
+
+            sph_distance(p1, p2, p3, p4, d, b1, b2)
+
+            if not radian:
+                b1 /= radians
+                b2 /= radians
+
+            return d, b1, b2
+
+        if (not cpython.PySequence_Check(p2)):
+            raise TypeError("p2 must be an iterable of float")
+        if (not cpython.PySequence_Check(p3)):
+            raise TypeError("p3 must be an iterable of float")
+        if (not cpython.PySequence_Check(p4)):
+            raise TypeError("p4 must be an iterable of float")
+
+        length = len(p1)
+        if (length != len(p2)):
+            raise IndexError("p1 and p2 must be of same length")
+        if (length != len(p3)):
+            raise IndexError("p1 and p3 must be of same length")
+        if (length != len(p4)):
+            raise IndexError("p1 and p4 must be of same length")
+
+        dtype = [e.dtype == np.float32 for e in [p1, p2, p3, p4]
+                 if type(e) is np.ndarray]
+
+        if np.any(dtype):
+
+            lat1_32 = np.array(p1, dtype=np.float32)
+            lon1_32 = np.array(p2, dtype=np.float32)
+            lat2_32 = np.array(p3, dtype=np.float32)
+            lon2_32 = np.array(p4, dtype=np.float32)
+
+            if not radian:
+                lat1_32 *= radians
+                lon1_32 *= radians
+                lat2_32 *= radians
+                lon2_32 *= radians
+
+            d_32 = np.empty(length, np.float32)
+            b1_32 = np.empty(length, np.float32)
+            b2_32 = np.empty(length, np.float32)
+
+            pt_lat1_32 = <float*> cnp.PyArray_DATA(lat1_32)
+            pt_lon1_32 = <float*> cnp.PyArray_DATA(lon1_32)
+            pt_lat2_32 = <float*> cnp.PyArray_DATA(lat2_32)
+            pt_lon2_32 = <float*> cnp.PyArray_DATA(lon2_32)
+
+            pt_d_32 = <float*> cnp.PyArray_DATA(d_32)
+            pt_b1_32 = <float*> cnp.PyArray_DATA(b1_32)
+            pt_b2_32 = <float*> cnp.PyArray_DATA(b2_32)
+
+            sph_distance_vec_f(pt_lat1_32, pt_lon1_32, pt_lat2_32, pt_lon2_32,
+                               pt_d_32, pt_b1_32, pt_b2_32, length)
+
+            if not radian:
+                b1_32 /= radians
+                b2_32 /= radians
+
+            return d_32, b1_32, b2_32
+
+        else:
+            lat1_64 = np.array(p1, dtype=np.float64)
+            lon1_64 = np.array(p2, dtype=np.float64)
+            lat2_64 = np.array(p3, dtype=np.float64)
+            lon2_64 = np.array(p4, dtype=np.float64)
+
+            if not radian:
+                lat1_64 *= radians
+                lon1_64 *= radians
+                lat2_64 *= radians
+                lon2_64 *= radians
+
+            d_64 = np.empty(length, np.float64)
+            b1_64 = np.empty(length, np.float64)
+            b2_64 = np.empty(length, np.float64)
+
+            pt_lat1_64 = <double*> cnp.PyArray_DATA(lat1_64)
+            pt_lon1_64 = <double*> cnp.PyArray_DATA(lon1_64)
+            pt_lat2_64 = <double*> cnp.PyArray_DATA(lat2_64)
+            pt_lon2_64 = <double*> cnp.PyArray_DATA(lon2_64)
+
+            pt_d_64 = <double*> cnp.PyArray_DATA(d_64)
+            pt_b1_64 = <double*> cnp.PyArray_DATA(b1_64)
+            pt_b2_64 = <double*> cnp.PyArray_DATA(b2_64)
+
+            sph_distance_vec_d(pt_lat1_64, pt_lon1_64, pt_lat2_64, pt_lon2_64,
+                               pt_d_64, pt_b1_64, pt_b2_64, length)
+
+            if not radian:
+                b1_64 /= radians
+                b2_64 /= radians
+
+            return d_64, b1_64, b2_64
+
+def distance(p1, p2, p3=None, p4=None, radian=False):
+    """ distance(p1, p2, p3=None, p4=None, radian=False) -> [m]
+
+        distance((lat[deg], lon[deg]), (lat[deg], lon[deg])) -> [m]
+        distance([lat[deg], lon[deg]],[lat[deg], lon[deg]]) -> [m]
+        distance(lat[deg], lon[deg], lat[deg], lon[deg]) -> [m]
+        distance(lat[rad], lon[rad], lat[rad], lon[rad], radian=True) -> [m]
+
         Computes the shortest distance between two positions defined by
         their latitudes and longitudes. The method (Haversine) assumes a
         spherical Earth of radius 6,371,000 m.
 
         As a reference, the minute of arc in latitude at the equator defines the
         nautical mile.
+
         >>> distance((0, 0), (0, 1./60))
         1853.2487774093122
-    """
-    cdef double d = 0, b1 = 0, b2 = 0
-    cdef double lat1 = p1[0]*radians, lon1 = p1[1]*radians
-    cdef double lat2 = p2[0]*radians, lon2 = p2[1]*radians
-    sph_distance(lat1, lon1, lat2, lon2, d, b1, b2)
-    return d
 
-@cython.boundscheck(False) # I will be reasonable, I promise
-@cython.wraparound (False) # no negative indices
-def distance_fast(p1, p2):
-    """ distance_fast(p1 [deg; deg], p2 [deg; deg]) -> [m]
+        You can also call distance without forming pairs:
+        >>> distance(0, 0, 0, 1./60)
+        1853.2487774093122
 
-        Computes the shortest distance between two positions defined by
-        their latitudes and longitudes. The method (Haversine) assumes a
-        spherical Earth of radius 6,371,000 m.
-
-        p1 and p2 are any kind of iterable. The result is a numpy array.
-
-        In order to vectorise efficiently, the operations are computed with
-        single precision floating point values, hence the differences in all
-        computed values.
-
+        p1 and p2 can also be of any kind of iterable.
+        The result is provided as a numpy array. (default dtype: numpy.float64)
         >>> size = 360 * 60 - 1
         >>> p1 = [(0, i / 60.) for i in range(size)]
         >>> p2 = [(0, (i + 1) / 60.) for i in range(size)]
-        >>> d = distance_fast(p1, p2)
-        >>> d[1:4]
-        array([ 1853.2487793 ,  1853.24865723,  1853.24902344], dtype=float32)
+        >>> d = distance(p1, p2)
+        >>> "%.7f %.7f" % (np.min(d), np.max(d))
+        '1853.2487774 1853.2487774'
+
+        You can also iterate on lists of coordinates without forming pairs:
+        >>> size = 360 * 60 - 1
+        >>> p1 = [ 0 for i in range(size)]
+        >>> p2 = [ i / 60. for i in range(size)]
+        >>> p3 = [ 0 for i in range(size)]
+        >>> p4 = [(i + 1) / 60. for i in range(size)]
+        >>> d = distance(p1, p2, p3, p4)
+        >>> "%.7f %.7f" % (np.min(d), np.max(d))
+        '1853.2487774 1853.2487774'
+
     """
-    cdef float f1 = 0, f2 = 0
-    cdef long length, i = 0
+    d, b1, b2 = distance_bearing(p1, p2, p3, p4, radian)
+    return d
 
-    if (not cpython.PySequence_Check(p1)):
-        raise TypeError("p1 must be iterable")
-    if (not cpython.PySequence_Check(p2)):
-        raise TypeError("p2 must be iterable")
-    length = len(p1)
-    if (length != len(p2)):
-        raise IndexError("p1 and p2 must be of same length")
+def bearing(p1, p2, p3=None, p4=None, radian=False):
+    """ bearing(p1, p2, p3=None, p4=None, radian=False) -> [deg/rad]
 
-    cdef cnp.ndarray[cnp.float32_t, mode="c", ndim=1] lat1, lon1, lat2, lon2
+        bearing((lat[deg], lon[deg]), (lat[deg], lon[deg])) -> [deg]
+        bearing([lat[deg], lon[deg]],[lat[deg], lon[deg]]) -> [deg]
+        bearing(lat[deg], lon[deg], lat[deg], lon[deg]) -> [deg]
+        bearing(lat[rad], lon[rad], lat[rad], lon[rad], radian=True) -> [rad]
 
-    lat1 = np.empty((length), dtype=np.float32)
-    lat2 = np.empty((length), dtype=np.float32)
-    lon1 = np.empty((length), dtype=np.float32)
-    lon2 = np.empty((length), dtype=np.float32)
-
-    cdef float* pt_lat1 = <float*> cnp.PyArray_DATA(lat1)
-    cdef float* pt_lon1 = <float*> cnp.PyArray_DATA(lon1)
-    cdef float* pt_lat2 = <float*> cnp.PyArray_DATA(lat2)
-    cdef float* pt_lon2 = <float*> cnp.PyArray_DATA(lon2)
-    cdef object item1, item2
-    cdef double x
-
-    for i in range(length):
-        item1 = cpython.PySequence_ITEM(p1, i)
-        # PyFloat_AS_DOUBLE is much faster but without any type cast
-        x = cpython.PyFloat_AsDouble(item1[0])
-        pt_lat1[i] = x * radians
-        x = cpython.PyFloat_AsDouble(item1[1])
-        pt_lon1[i] = x * radians
-
-        item2 = cpython.PySequence_ITEM(p2, i)
-        x = cpython.PyFloat_AsDouble(item2[0])
-        pt_lat2[i] = x * radians
-        x = cpython.PyFloat_AsDouble(item2[1])
-        pt_lon2[i] = x * radians
-
-    cdef cnp.ndarray[cnp.float32_t, mode="c", ndim=1 ] distance
-    distance = np.empty(length, np.float32)
-    b1 = np.empty(length, np.float32)
-    b2 = np.empty(length, np.float32)
-    cdef float* pt_distance = <float*> cnp.PyArray_DATA(distance)
-    cdef float* pt_b1 = <float*> cnp.PyArray_DATA(b1)
-    cdef float* pt_b2 = <float*> cnp.PyArray_DATA(b2)
-
-    sph_distance_fast(pt_lat1, pt_lon1, pt_lat2, pt_lon2,
-                      pt_distance, pt_b1, pt_b2, length)
-
-    return distance
-
-def bearing(p1, p2):
-    """ bearing(p1 [deg; deg], p2 [deg; deg]) -> [deg]
         Computes the initial bearing (direction, azimuth) from position 1 to
         position 2 defined by their latitudes and longitudes, following a great
         circle. Note that unlike a loxodrome, the bearing changes continously
@@ -124,12 +319,32 @@ def bearing(p1, p2):
         The following example shows the direction to the East.
         >>> bearing((0, 0), (0, 1./60))
         90.0
+
+        You can also call bearing without forming pairs:
+        >>> bearing(0, 0, 0, 1./60)
+        90.0
+
+        p1 and p2 can also be of any kind of iterable.
+        The result is provided as a numpy array. (default dtype: numpy.float64)
+        >>> size = 360 * 60 - 1
+        >>> p1 = [(0, i / 60.) for i in range(size)]
+        >>> p2 = [(0, (i + 1) / 60.) for i in range(size)]
+        >>> b = bearing(p1, p2)
+        >>> np.min(b), np.max(b)
+        (90.0, 90.0)
+
+        You can also iterate on lists of coordinates without forming pairs:
+        >>> size = 360 * 60 - 1
+        >>> p1 = [ 0 for i in range(size)]
+        >>> p2 = [ i / 60. for i in range(size)]
+        >>> p3 = [ 0 for i in range(size)]
+        >>> p4 = [(i + 1) / 60. for i in range(size)]
+        >>> d = bearing(p1, p2, p3, p4)
+        >>> np.min(b), np.max(b)
+        (90.0, 90.0)
     """
-    cdef double d = 0, b1 = 0, b2 = 0
-    cdef double lat1 = radians * p1[0], lon1 = radians * p1[1]
-    cdef double lat2 = radians * p2[0], lon2 = radians * p2[1]
-    sph_distance(lat1, lon1, lat2, lon2, d, b1, b2)
-    return b1 / radians
+    d, b1, b2 = distance_bearing(p1, p2, p3, p4, radian)
+    return b1
 
 def destination(p, double bearing, float distance):
     """ destination(p [deg; deg], bearing [deg], distance [m]) -> [deg; deg]
@@ -186,15 +401,4 @@ def intersection(p1, b1, p2, b2):
         return (lat / radians, lon / radians)
     except Exception:
         return None
-
-def latitudemax(p,b):
-    """ latitudemax(p [deg; deg], b [deg]) -> [deg]
-        Returns the maximum latitude of a great circle path, given a position
-        and a bearing on the great circle. Also known as Clairaut's equation.
-
-        >>> latitudemax((0, 0), 0)
-        90.0
-    """
-    return (math.acos(abs(math.sin(radians * b) *
-                          math.cos(radians * p[0])))) / radians
 
