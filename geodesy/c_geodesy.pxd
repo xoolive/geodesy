@@ -4,10 +4,10 @@ cdef extern from "../src/spherical_geodesy.h":
         (double, double, double, double, double, double, double)
     void sph_distance_vec_d "SphericalGeodesy_d::distanceAndBearing"\
         (double*, double*, double*, double*,\
-         double*, double*, double*, unsigned int)
+         double*, double*, double*, long)
     void sph_distance_vec_f "SphericalGeodesy_f::distanceAndBearing"\
         (float*, float*, float*, float*,\
-         float*, float*, float*, unsigned int)
+         float*, float*, float*, long)
 
     void sph_destination "SphericalGeodesy_d::destination"\
         (double, double, double, double, double, double, double)
@@ -20,6 +20,9 @@ cdef extern from "../src/spherical_geodesy.h":
 cdef extern from "../src/wgs84_geodesy.h":
     void wgs84_distance "WGS84Geodesy_d::distanceAndBearing"\
         (double, double, double, double, double, double, double)
+    void wgs84_distance_vec_d "WGS84Geodesy_d::distanceAndBearing"\
+        (double*, double*, double*, double*,\
+         double*, double*, double*, long)
     void wgs84_destination "WGS84Geodesy_d::destination"\
         (double, double, double, double, double, double, double)
 
