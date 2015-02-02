@@ -1,45 +1,19 @@
 cmake_minimum_required (VERSION 2.6)
-project (deconflict CXX)
-
-if (WIN32)
-
-find_program (INTEL_COMPILER icl)
-if (INTEL_COMPILER)
-  include (CMakeForceCompiler)
-  cmake_force_c_compiler (${INTEL_COMPILER} "Intel C Compiler")
-  cmake_force_cxx_compiler (${INTEL_COMPILER} "Intel C++ Compiler")
-endif (INTEL_COMPILER)
-
-else (WIN32)
-
-find_program (INTEL_COMPILER icc)
-if (INTEL_COMPILER)
-  include (CMakeForceCompiler)
-  cmake_force_c_compiler (icc "Intel C Compiler")
-  cmake_force_cxx_compiler (icpc "Intel C++ Compiler")
-endif (INTEL_COMPILER)
-
-endif (WIN32)
+project (geodesy CXX)
 
 set (CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../ocaml-cmake/cmake")
 
 find_package (OCaml REQUIRED)
 include (UseOCaml)
 
+find_ocaml_package(oUnit)
+
 include_directories (
   ${CMAKE_SOURCE_DIR}/src
   ${CMAKE_OCaml_STD_LIBRARY_PATH}
   )
 
-set_source_files_properties(src/ml_geodesy.c
-  PROPERTIES LANGUAGE CXX)
-
-#  _M_IX86_FP is undefined with Microsoft 64-bit compiler
-if (CMAKE_CL_64)
-  add_definitions(/D__SSE2__)
-endif (CMAKE_CL_64)
-
-add_library (mlgeodesy src/ml_geodesy.c)
+add_library (mlgeodesy ocaml/ml_geodesy.cpp)
 
 add_ocaml_library (geodesy
   NATIVE
@@ -68,14 +42,7 @@ install (
 
 enable_testing()
 
-# These functions are embedded into INTEL_COMPILER
-# Those checks should be performed with other compilers though!
-if (INTEL_COMPILER)
-else (INTEL_COMPILER)
-  add_executable (tests_sse2_math tests/test_sse2_math.cpp)
-  add_test (sse2_math tests_sse2_math)
-endif (INTEL_COMPILER)
-
+# TODO -cclib "-Wl,-no_compact_unwind"
 add_ocaml_executable (tests_geodesy NATIVE
   SOURCES tests/test_geodesy
   PACKAGES oUnit
@@ -83,11 +50,4 @@ add_ocaml_executable (tests_geodesy NATIVE
   C_LIBRARIES mlgeodesy)
 
 add_test (geodesy tests_geodesy)
-
-add_ocaml_executable (bench_geodesy NATIVE
-  SOURCES tests/bench_geodesy
-  LIBRARIES geodesy
-  C_LIBRARIES mlgeodesy)
-
-
 
