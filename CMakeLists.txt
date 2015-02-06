@@ -3,10 +3,10 @@ project (geodesy CXX)
 
 set (CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../ocaml-cmake/cmake")
 
+option (BUILD_TESTS "Build tests" OFF)
+
 find_package (OCaml REQUIRED)
 include (UseOCaml)
-
-find_ocaml_package(oUnit)
 
 include_directories (
   ${CMAKE_SOURCE_DIR}/src
@@ -40,14 +40,18 @@ install (
   EXPORT geodesy-config
   DESTINATION lib/ocaml/site-lib/geodesy)
 
-enable_testing()
+if (BUILD_TESTS)
+  enable_testing()
 
-# TODO -cclib "-Wl,-no_compact_unwind"
-add_ocaml_executable (tests_geodesy NATIVE
-  SOURCES tests/test_geodesy
-  PACKAGES oUnit
-  LIBRARIES geodesy
-  C_LIBRARIES mlgeodesy)
+  find_ocaml_package(oUnit)
 
-add_test (geodesy tests_geodesy)
+  # TODO -cclib "-Wl,-no_compact_unwind"
+  add_ocaml_executable (tests_geodesy NATIVE
+    SOURCES tests/test_geodesy
+    PACKAGES oUnit
+    LIBRARIES geodesy
+    C_LIBRARIES mlgeodesy)
 
+  add_test (geodesy tests_geodesy)
+
+endif (BUILD_TESTS)

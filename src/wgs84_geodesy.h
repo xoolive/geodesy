@@ -19,6 +19,10 @@ public:
         const T& fromlat, const T& fromlon, const T& bearing1, const T& dist,
         T& tolat, T& tolon, T& bearing2);
 
+    static void destination(
+        const T* fromlat, const T* fromlon, const T* bearing1, const T* dist,
+        T* tolat, T* tolon, T* bearing2, long len);
+
 private:
     static T EarthRadius;
     static T wgs84_a;

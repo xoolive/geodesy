@@ -166,3 +166,15 @@ void WGS84Geodesy<T>::destination(
 
 }
 
+template<typename T>
+void WGS84Geodesy<T>::destination(
+    const T* fromlat, const T* fromlon, const T* bearing1, const T* distance,
+    T* tolat, T* tolon, T* bearing2, long len)
+{
+    long i = 0;
+    for (; i < len ; ++i)
+    {
+        destination(fromlat[i], fromlon[i], bearing1[i], distance[i],
+                    tolat[i], tolon[i], bearing2[i]);
+    }
+}
