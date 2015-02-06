@@ -378,6 +378,46 @@ void SphericalGeodesy<__m128d>::destination(
 #endif
 
 template<typename T>
+void SphericalGeodesy<T>::destination(
+    const T* fromlat, const T* fromlon, const T* bearing1, const T* distance,
+    T* tolat, T* tolon, T* bearing2, long len)
+{
+    long i = 0;
+    for (; i < len ; ++i)
+    {
+        destination(fromlat[i], fromlon[i], bearing1[i], distance[i],
+                    tolat[i], tolon[i], bearing2[i]);
+    }
+}
+
+template<>
+void SphericalGeodesy<float>::destination(
+    const float* fromlat, const float* fromlon,
+    const float* bearing1, const float* distance,
+    float* tolat, float* tolon, float* bearing2, long len)
+{
+    long i = 0;
+#ifdef __SSE2__
+    __m128 lat, lon, b2;
+    for (; i < len - 3; i += 4)
+    {
+        SphericalGeodesy<__m128>::destination(
+            _mm_load_ps(fromlat+i), _mm_load_ps(fromlon+i),
+            _mm_load_ps(bearing1+i), _mm_load_ps(distance+i),
+            lat, lon, b2);
+        _mm_storeu_ps(tolat + i, lat);
+        _mm_storeu_ps(tolon + i, lon);
+        _mm_storeu_ps(bearing2 + i, b2);
+    }
+#endif
+    for (; i < len ; ++i)
+    {
+        destination(fromlat[i], fromlon[i], bearing1[i], distance[i],
+                    tolat[i], tolon[i], bearing2[i]);
+    }
+}
+
+template<typename T>
 void SphericalGeodesy<T>::crosstrack(
     const T& fromlat, const T& fromlon,
     const T& rlat, const T& rlon, const T& rbrng,
