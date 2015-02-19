@@ -1,0 +1,17 @@
+opam-version: "1.2"
+name: "geodesy"
+version: "0.1"
+maintainer: "Xavier Olive <xavier@xoolive.org>"
+authors: "Xavier Olive <xavier@xoolive.org>"
+homepage: "https://github.com/xoolive/geodesy"
+license: "MIT"
+build: [
+  ["git" "clone" "https://github.com/ocaml-cmake/ocaml-cmake"]
+  ["cmake" "-DCMAKE_MODULE_PATH=./ocaml-cmake/cmake" "."]
+  [make]
+]
+install: ["ocamlfind" "install" "geodesy"
+"META" "geodesy-byte.cma" "geodesy.cmxa" "geodesy.a" "libmlgeodesy.a"
+"CMakeFiles/ocaml.geodesy.dir/geodesy.cmi"]
+remove: ["ocamlfind" "remove" "geodesy"]
+depends: "ocamlfind" {build}
