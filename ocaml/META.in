@@ -1,0 +1,7 @@
+# Specifications for the "geodesy" library:
+version = "1.0"
+description = "A pragmatic and efficient geodesy toolkit"
+author = "Xavier Olive"
+archive(byte) = "geodesy-byte.cma"
+archive(native) = "geodesy.cmxa"
+linkopts = "-cc @CMAKE_CXX_COMPILER@"
