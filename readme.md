@@ -32,7 +32,7 @@ The `ocaml` folder contains the OCaml interface. Refer to `geodesy.mli` for the 
 
 Recommended installation procedure using `ocamlfind` and `opam` (from version 1.2), provided your `PATH` yields access to `cmake`:
 ```
- opam pin add geodesy https://github.com/xoolive/geodesy.git
+ opam pin add geodesy git://github.com/xoolive/geodesy.git
 ```
 You can then compile your OCaml source file with `ocamlfind`, e.g.:
 ```
