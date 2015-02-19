@@ -13,7 +13,7 @@ The `src` folder contains the C++ implementation. Simply include resp. `spherica
 
 The `geodesy` folder contains the Python interface and exposes both `geodesy.sphere` and `geodesy.wgs84` modules. You can install the module with the `setup.py` file provided. `numpy` is necessary to compile the library.
 
-Recommended installation procedure :
+Recommended installation procedure:
 - `virtualenv` (optional, but a good idea nonetheless):
 ```
  virtualenv geo_test
@@ -30,8 +30,17 @@ You can then read the manual embedded in `geodesy.sphere` and `geodesy.wgs84`
 
 The `ocaml` folder contains the OCaml interface. Refer to `geodesy.mli` for the interface.
 
-The `CMakeLists.txt` offers a decent installation procedure provided you want to embed the library in bigger projects. You will need to clone the [ocaml-cmake](https://github.com/ocaml-cmake/ocaml-cmake) project first (and possibly edit the `CMAKE_MODULE_PATH` variable in the `CMakeLists.txt` accordingly).
+Recommended installation procedure using `ocamlfind` and `opam` (from version 1.2), provided your `PATH` yields access to `cmake`:
+```
+ opam pin add geodesy https://github.com/xoolive/geodesy.git
+```
+You can then compile your OCaml source file with `ocamlfind`, e.g.:
+```
+ ocamlfind ocamlc -linkpkg -package oUnit,geodesy tests/test_geodesy.ml
+```
 
-An automatic installation procedure via opam/ocamlfind is considered. Any contribution is welcome!
+The `CMakeLists.txt` also offers a decent installation procedure provided you want to embed the library in bigger projects. You will need to clone the [ocaml-cmake](https://github.com/ocaml-cmake/ocaml-cmake) project first and set the `CMAKE_MODULE_PATH` accordingly.
+
+You can also use the `make install` target for a project installation that you may later import in a different project. (`find_package (geodesy REQUIRED)` in your new `CMakeLists.txt`)
 
 
