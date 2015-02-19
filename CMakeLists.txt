@@ -43,26 +43,26 @@ if (BUILD_TESTS)
 endif (BUILD_TESTS)
 
 # If you don't want to install with ocamlfind:
-#
-# install_ocaml_targets (geodesy
-#   DESTINATION lib/ocaml/site-lib/geodesy)
-#
-# install_ocaml_targets (geodesy-byte
-#   DESTINATION lib/ocaml/site-lib/geodesy)
-#
-# install_ocaml_interfaces (geodesy
-#   geodesy
-#   DESTINATION lib/ocaml/site-lib/geodesy)
-#
-# install_ocaml_exports (geodesy
-#   DESTINATION lib/ocaml/site-lib/geodesy
-#   FILE geodesy-config-mli.cmake)
-#
-# install (
-#   TARGETS mlgeodesy
-#   EXPORT geodesy-config
-#   DESTINATION lib/ocaml/site-lib/geodesy)
-#
-# install (
-#   EXPORT geodesy-config
-#   DESTINATION lib/ocaml/site-lib/geodesy)
+
+install_ocaml_targets (geodesy
+  DESTINATION lib/ocaml/site-lib/geodesy)
+
+install_ocaml_targets (geodesy-byte
+  DESTINATION lib/ocaml/site-lib/geodesy)
+
+install_ocaml_interfaces (geodesy
+  geodesy
+  DESTINATION lib/ocaml/site-lib/geodesy)
+
+install_ocaml_exports (geodesy
+  DESTINATION lib/ocaml/site-lib/geodesy
+  FILE geodesy-config-mli.cmake)
+
+install (
+  TARGETS mlgeodesy
+  EXPORT geodesy-config
+  DESTINATION lib/ocaml/site-lib/geodesy)
+
+install (
+  EXPORT geodesy-config
+  DESTINATION lib/ocaml/site-lib/geodesy)
