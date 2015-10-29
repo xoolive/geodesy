@@ -1,4 +1,4 @@
-(** Computing great circles for Spherical and WGS84 models. *)
+(** Computing with great circles for Spherical and WGS84 models. *)
 
 
 (** The type for degrees and radians *)

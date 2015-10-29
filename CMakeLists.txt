@@ -13,6 +13,23 @@ include_directories (
 
 add_library (mlgeodesy ocaml/ml_geodesy.cpp)
 
+if (WIN32)
+  set (OCAML_LINKER ${CMAKE_Flexlink_EXECUTABLE})
+  execute_process(
+    COMMAND         ${CMAKE_CXX_COMPILER} -print-file-name=libstdc++.a
+    OUTPUT_VARIABLE LIBSTDCXX_PATH
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+  execute_process(
+    COMMAND         ${CMAKE_CXX_COMPILER} -print-file-name=libgcc_eh.a
+    OUTPUT_VARIABLE LIBGCC_EH_PATH
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+  set (OCAML_LINKER "${OCAML_LINKER} ${LIBSTDCXX_PATH} ${LIBGCC_EH_PATH}")
+else (WIN32)
+  set (OCAML_LINKER ${CMAKE_CXX_COMPILER})
+endif (WIN32)
+
 configure_file (
   ${CMAKE_SOURCE_DIR}/ocaml/META.in
   ${CMAKE_BINARY_DIR}/META)
