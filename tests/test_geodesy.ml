@@ -16,8 +16,22 @@ let test_geodesy_distance () =
     let nm = SphericalGeodesy.distance 0. 0. 0. (radians 1./.60.) in
     assert_float nm 1853.248777409312 "SphericalGeodesy.distance";
 
+    let nm = SphericalGeodesy.distance ~units:Deg 0. 0. 0. 1./.60. in
+    assert_float nm 1853.248777409312 "SphericalGeodesy.distance";
+
     let nm = WGS84Geodesy.distance 0. 0. 0. (radians 1./.60.) in
     assert_float nm 1855.324846 "WGS84Geodesy.distance";
+
+  end
+
+let test_geodesy_bearing () =
+  begin
+
+    let b = SphericalGeodesy.bearing 0. 0. 0. (radians 1./.60.) in
+    assert_float b pi "SphericalGeodesy.distance";
+
+    let b = WGS84Geodesy.bearing 0. 0. 0. (radians 1./.60.) in
+    assert_float b pi "WGS84Geodesy.distance";
 
   end
 
