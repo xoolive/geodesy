@@ -1,4 +1,4 @@
-(** Computing with great circles for Spherical and WGS84 models. *)
+(** A pragmatic and efficient geodesy toolkit. *)
 
 
 (** The type for degrees and radians *)
