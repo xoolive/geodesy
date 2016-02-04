@@ -498,4 +498,43 @@ void SphericalGeodesy<T>::intersection(
 
 }
 
+template<typename T>
+void SphericalGeodesy<T>::geodesicToCartesian(
+    const T& lat, const T& lon, const T& alt, T& x, T& y, T& z)
+{
+  T dist = (EarthRadius + alt) * cos(lat);
+  x = dist * cos(lon);
+  y = dist * sin(lon);
+  z = (EarthRadius + alt) * sin(lat);
+
+}
+
+template<typename T>
+void SphericalGeodesy<T>::cartesianToGeodesic(
+    const T& x, const T& y, const T& z, T& lat, T& lon, T& alt)
+{
+  T dd = x * x + y * y;
+
+  if (dd <= 1e-12)
+  {
+    alt = fabs(z) - EarthRadius;
+    lon = (T) 0.;
+
+    if (alt > 1e-12)
+      lat = HALF_PI;
+    else if (alt < -1e-12)
+      lat = -HALF_PI;
+    else
+      lat = (T) 0.;
+  }
+  else
+  {
+    T r = sqrt(dd + z*z);
+    alt = r - EarthRadius;
+    lat = asin(z/r);
+    lon = atan2(y, x);
+  }
+}
+
+
 

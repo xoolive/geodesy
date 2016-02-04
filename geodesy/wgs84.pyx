@@ -32,7 +32,8 @@ cimport cpython
 
 from c_geodesy cimport\
     wgs84_distance, wgs84_distance_vec_d,\
-    wgs84_destination, wgs84_destination_vec_d
+    wgs84_destination, wgs84_destination_vec_d,\
+    wgs84_geodesic_to_cartesian, wgs84_cartesian_to_geodesic
 
 cdef double radians = np.arccos(-1) / 180
 
@@ -489,3 +490,36 @@ def destination(p1, p2, p3, p4=None, radian=False):
             lon_64 /= radians
 
         return lat_64, lon_64
+
+def geodesic_to_cartesian(double lat, double lon, double alt, radian=False):
+    """ geodesic_to_cartesian(p1, p2, p3, radian=False) -> [m], [m], [m]
+
+    geodesic_to_cartesian(lat[deg], lon[deg], alt[m]) -> [m], [m], [m]
+    TODO:
+    geodesic_to_cartesian((lat, lon, alt) [deg; deg; m]) -> [m], [m], [m]
+
+    Converts geodesic coordinates to Cartesian coordinates.
+    """
+    cdef double x = 0, y = 0, z = 0
+    if not radian:
+        lat = lat * radians
+        lon = lon * radians
+    wgs84_geodesic_to_cartesian(lat, lon, alt, x, y, z)
+    return (x, y, z)
+
+def cartesian_to_geodesic(double x, double y, double z, radian=False):
+    """ cartesian_to_geodesic(x, y, z, radian=False) -> [deg], [deg], [m]
+
+    cartesian_to_geodesic(x[m], y[m], z[m]) -> lat[deg], lon[deg], alt[m]
+    TODO (tuple, array, numpy):
+    cartesian_to_geodesic((x, y, z) [m; m; m]) -> (lat[deg], lon[deg], alt[m])
+
+    Converts Cartesian coordinates to geodesic coordinates
+    """
+    cdef double lat = 0, lon = 0, alt = 0
+    wgs84_cartesian_to_geodesic(x, y, z, lat, lon, alt)
+    if not radian:
+        lat = lat / radians
+        lon = lon / radians
+    return (lat, lon , alt)
+

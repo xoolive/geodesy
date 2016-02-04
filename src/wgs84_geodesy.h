@@ -23,6 +23,12 @@ public:
         const T* fromlat, const T* fromlon, const T* bearing1, const T* dist,
         T* tolat, T* tolon, T* bearing2, long len);
 
+    static void geodesicToCartesian(
+        const T& lat, const T& lon, const T& alt, T& x, T& y, T& z);
+
+    static void cartesianToGeodesic(
+        const T& x, const T& y, const T& z, T& lat, T& lon, T& alt);
+
 private:
     static T EarthRadius;
     static T wgs84_a;

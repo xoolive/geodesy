@@ -39,6 +39,12 @@ public:
         const T& lat2, const T& lon2, const T& bearing2,
         T& lat, T& lon);
 
+    static void geodesicToCartesian(
+        const T& lat, const T& lon, const T& alt, T& x, T& y, T& z);
+
+    static void cartesianToGeodesic(
+        const T& x, const T& y, const T& z, T& lat, T& lon, T& alt);
+
 private:
     static T EarthRadius;
 };
@@ -50,6 +56,8 @@ private:
   template<> __m128d SphericalGeodesy<__m128d>::EarthRadius =
     _mm_set1_pd(6371000.0);
 #endif
+
+const double HALF_PI = acos(-1.) / 2.;
 
 #include "spherical_geodesy.hpp"
 

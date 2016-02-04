@@ -178,3 +178,72 @@ void WGS84Geodesy<T>::destination(
                     tolat[i], tolon[i], bearing2[i]);
     }
 }
+
+template<typename T>
+void WGS84Geodesy<T>::cartesianToGeodesic(
+    const T& x, const T& y, const T& z, T& lat, T& lon, T& alt)
+{
+  T polar_axis, p, theta, phi, phip, e2, ee2;
+
+  polar_axis = wgs84_a * ((T) 1.0 - wgs84_f);
+  e2 = wgs84_f * ((T) 2.0 - wgs84_f);
+  ee2 = e2 / ((T) 1.0 - e2);
+  p = sqrt((x * x) + (y * y));
+
+  // Si X=Y=0, la longitude ne peut etre déterminée
+  if (p <= 1e-11)
+  {
+    lon = 0.0;
+    if (z >= 0.0)
+    {
+      lat = HALF_PI;
+      alt = z - polar_axis;
+    }
+    else
+    {
+      lat = -HALF_PI;
+      alt = -(z + polar_axis);
+    }
+  }
+  else
+  {
+    // Calcul d'une première approximation de la latitude
+    theta = atan((wgs84_a * z) / (polar_axis * p));
+    phi = atan((z + (ee2 * polar_axis * pow(sin(theta), (T) 3.0))) /
+               (p - (e2 * wgs84_a * pow(cos(theta), (T) 3.0))));
+    phip = 0.0;
+
+    // Boucle tant que la précision voulue n'est pas atteinte
+    while (fabs(phip - phi) > 1e-11)
+    {
+      phip = phi;
+      theta = atan((polar_axis / wgs84_a) * tan(phip));
+      phi = atan((z + (ee2 * polar_axis * pow(sin(theta), (T) 3.0))) /
+                 (p - (e2 * wgs84_a * pow(cos(theta), (T) 3.0))));
+    }
+
+    // Calculs finaux de la longitude et de l'altitude
+    lat = phi;
+    lon = atan2(y, x);
+    // Très bête, atan -> [-π, π]
+    // lati.setBetweenMINUSPIandPLUSPI(phi);
+    // longi.setBetweenMINUSPIandPLUSPI(atan2(y,x));
+
+    alt = (p / cos(phi))
+      - (wgs84_a / sqrt(1.0 - e2 * pow(sin(phi), (T) 2.0)));
+  }
+
+}
+
+template<typename T>
+void WGS84Geodesy<T>::geodesicToCartesian(
+    const T& lat, const T& lon, const T& alt, T& x, T& y, T& z)
+{
+  T rg, e2;
+  e2 = wgs84_f * ((T) 2.0 - wgs84_f);
+  rg = wgs84_a / sqrt(1.0 - e2 * pow(sin(lat), (T) 2.0));
+
+  x = (rg + alt) * cos(lat) * cos(lon);
+  y = (rg + alt) * cos(lat) * sin(lon);
+  z = (rg + alt - (e2 * rg)) * sin(lat);
+}

@@ -31,7 +31,7 @@ extensions = [
 ]
 
 setup(name="geodesy",
-      version="1.0",
+      version="1.1",
       author="Xavier Olive",
       author_email="xavier@xoolive.org",
       description="A pragmatic and efficient geodesy toolkit",
