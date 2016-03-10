@@ -677,3 +677,48 @@ def cartesian_to_geodesic(double x, double y, double z, radian=False):
         lon = lon / radians
     return (lat, lon , alt)
 
+def greatcircle(pos1, pos2, n=100, radian=False):
+    """greatcircle(pos1[deg, deg], pos2[deg, deg], n=100, radian=False)
+
+    Builds the coordinates of a great circle between pos1 and pos2.
+
+    n is correlated to the number of points to interpolate: n=2 adds
+    one point halfway, n=3 adds two points at 1/3 and 2/3 of the way, etc.
+
+    >>> valparaiso = (-33, -71.6)
+    >>> shanghai = (31.4, 121.8)
+    >>> gc = greatcircle(valparaiso, shanghai, 2)
+    >>> for i in range(3):
+    >>>     print ("lat: %.2f deg, lon: %.2f deg, bearing: %.2f deg" %
+    >>>            (gc[0][i], gc[1][i], gc[2][i]))
+    lat: -33.00 deg, lon: -71.60 deg, bearing: -94.41 deg
+    lat: -6.81 deg, lon: -159.18 deg, bearing: -57.36 deg
+    lat: 31.40 deg, lon: -238.20 deg, bearing: -78.42 deg
+    """
+
+    # lat: lat, lon: lon, alpha: bearing
+    if not radian:
+        pos1, pos2 = np.radians(pos1), np.radians(pos2)
+
+    alpha1 = bearing(pos1, pos2, radian=True)
+    alpha2 = bearing(pos2, pos1, radian=True) - np.pi
+
+    sin_alpha0 = np.sin(alpha1)*np.cos(pos1[0])
+    alpha0 = np.arcsin(sin_alpha0)
+
+    sigma1 = np.arctan2(np.tan(pos1[0]), np.cos(alpha1))
+    sigma2 = np.arctan2(np.tan(pos2[0]), np.cos(alpha2))
+    sigma = sigma1 + np.arange(0, 1+1e-12, 1/n) * (sigma2 - sigma1)
+
+    lon0 = pos1[1] - np.arctan2(np.sin(alpha0) * np.sin(sigma1), np.cos(sigma1))
+
+    sin_lat = np.cos(alpha0) * np.sin(sigma)
+
+    lon = lon0 + np.arctan2(np.sin(alpha0)*np.sin(sigma), np.cos(sigma))
+    alpha = np.arctan2(np.tan(alpha0), np.cos(sigma))
+    lat = np.arcsin(np.cos(alpha0) * np.sin(sigma))
+
+    if not radian:
+        lon, lat, alpha = np.degrees(lon), np.degrees(lat), np.degrees(alpha)
+
+    return (lat, lon, alpha)
